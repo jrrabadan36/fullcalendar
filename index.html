@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Calendario</title>
+        <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/2.6.1/fullcalendar.min.css">
+        <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/clockpicker/0.0.7/bootstrap-clockpicker.min.css">
+        <style>
+            .fc th {
+                padding: 10px 0px;
+                vertical-align: middle;
+                background: #F2F2F2;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="col"></div>
+                <div class="col-7"><br><br>
+                    <div id="calendarioWeb"></div>
+                </div>
+                <div class="col"></div>
+            </div>
+        </div>
+
+        <!-- Modal (Agregar, Modificar, Eliminar) -->
+        <div class="modal fade" id="modalEventos" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="eventoTitulo"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="txtId" name="txtFecha">
+                        <input type="hidden" id="txtFecha" name="txtId">
+                        <div class="form-row">
+                            <div class="form-group col-md-8">
+                                <label for="txtTitulo">Título:</label>
+                                <input type="text" class="form-control" id="txtTitulo" name="txtTitulo" placeholder="Título del evento">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="txtHora">Hora:</label>
+                                <div class="input-group clockpicker" data-autoclose="true">
+                                    <input type="text" class="form-control" id="txtHora" name="txtHora" value="10:30" placeholder="Hora del evento">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="txtDescripcion">Descripción:</label>
+                            <textarea class="form-control" id="txtDescripcion" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="txtColor">Color:</label>
+                            <input type="color" class="form-control" style="height:36px;" id="txtColor" value="#ff0000">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-success" id="btnAgregar">Agregar</button>
+                        <button type="button" class="btn btn-primary" id="btnModificar">modificar</button>
+                        <button type="button" class="btn btn-danger" id="btnEliminar">Borrar</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.12.0/moment.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/2.6.1/fullcalendar.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/locale/es.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+        <script type="text/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/clockpicker/0.0.7/bootstrap-clockpicker.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                $("#calendarioWeb").fullCalendar({
+                    lang: 'es',
+                    header: {
+                        left: 'today,prev,next,miBoton',
+                        center:'title',
+                        right:'month,basicWeek,basicDay,agendaWeek,agendaDay'
+                    }, customButtons: {
+                        miBoton: {
+                            text: 'Botón 1',
+                            click: function() {
+                                alert('Has presionado el botón 1');
+                            }
+                        }
+                    }, dayClick: function(date, jsEvent, view){
+                        $('#btnAgregar').prop('disabled', false);
+                        $('#btnModificar').prop('disabled', true);
+                        $('#btnEliminar').prop('disabled', true);
+
+                        limpiarFormulario();
+                        $('#txtFecha').val(date.format());
+                        $('#modalEventos').modal();
+                    }, events: 'http://localhost/fullcalendar/eventos.php'
+                    , eventClick: function(calEvent, jsEvent, view) {
+                        $('#btnAgregar').prop('disabled', true);
+                        $('#btnModificar').prop('disabled', false);
+                        $('#btnEliminar').prop('disabled', false);
+                        // H5
+                        $('#eventoTitulo').html(calEvent.title);
+                        // Mostrar la información del evento en los inputs
+                        $('#txtDescripcion').val(calEvent.descripcion);
+                        $('#txtId').val(calEvent.id);
+                        $('#txtTitulo').val(calEvent.title);
+                        $('#txtColor').val(calEvent.color);
+
+                        fechaHora = calEvent.start._i.split(" ");
+                        $('#txtFecha').val(fechaHora[0]);
+                        $('#txtHora').val(fechaHora[1]);
+
+                        $('#modalEventos').modal();
+                    }, editable: true
+                    , eventDrop: function(calEvent) {
+                        $('#txtId').val(calEvent.id);
+                        $('#txtTitulo').val(calEvent.title);
+                        $('#txtColor').val(calEvent.color);
+                        $('#txtDescripcion').val(calEvent.descripcion);
+
+                        //var fechaHora = calEvent.start._i.split(" ");
+                        var fechaHora = calEvent.start.format().split("T");
+                        $('#txtFecha').val(fechaHora[0]);
+                        $('#txtHora').val(fechaHora[1]);
+
+                        recolectarDatosGui();
+                        enviarInformacion('modificar', nuevoEvento, true);
+                    }
+
+                });
+                var nuevoEvento;
+
+                $('#btnAgregar').click(function(e){
+                    recolectarDatosGui();
+                    enviarInformacion('agregar', nuevoEvento);
+                });
+                $('#btnEliminar').click(function(e){
+                    recolectarDatosGui();
+                    enviarInformacion('eliminar', nuevoEvento);
+                });
+                $('#btnModificar').click(function(e){
+                    recolectarDatosGui();
+                    enviarInformacion('modificar', nuevoEvento);
+                });
+
+                function recolectarDatosGui() {
+                    nuevoEvento = {
+                        id: $('#txtId').val(),
+                        title: $('#txtTitulo').val(), 
+                        start: $('#txtFecha').val()+' '+$('#txtHora').val(),
+                        color: $('#txtColor').val(),
+                        descripcion: $('#txtDescripcion').val(),
+                        textColor: '#FFFFFF',
+                        end: $('#txtFecha').val()+' '+$('#txtHora').val()
+                    };
+                }
+
+                function enviarInformacion(accion, objEvento, modal) {
+                    $.ajax({
+                        type: 'POST',
+                        url: 'eventos.php?accion='+accion,
+                        data: objEvento,
+                        success: function(msg) {
+                            if (msg) {
+                                $('#calendarioWeb').fullCalendar('refetchEvents');
+
+                                if (!modal) {
+                                    $('#modalEventos').modal('toggle');
+                                }
+                            }
+                        }, error: function() {
+                            alert('Hay un error...');
+                        }
+                    });
+                }
+
+                function limpiarFormulario() {
+                    $('#txtId').val('');
+                    $('#txtTitulo').val('');
+                    $('#txtColor').val('');
+                    $('#txtDescripcion').val('');
+                }
+
+                $('.clockpicker').clockpicker();
+            });
+        </script>
+    </body>
+</html>
